@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}-splunk
+spec:
+  selector:
+    matchLabels:
+      app: splunk-forwarder
+  template:
+    metadata:
+      labels:
+        app: splunk-forwarder
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: forwarder
+        image: splunk/universalforwarder:latest
+        env:
+        - name: SPLUNK_STANDALONE_URL
+          value: {{ .Values.splunk.server }}
+        volumeMounts:
+        - name: docker-logs
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+      volumes:
+      - name: docker-logs
+        hostPath:
+          path: /var/lib/docker/containers
+

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-nginx
+  labels:
+    app: nginx
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule # Forces strict spreading
+          labelSelector:
+            matchLabels:
+              app: nginx
+      containers:
+        - name: nginx
+          image: {{ .Values.nginx.image }}
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: {{ .Values.nginx.cpuRequest }}
+---
+# Autoscaling implimentation
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}-nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}-nginx
+  minReplicas: 4
+  maxReplicas: 8
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: packets-per-second
+      target:
+        type: AverageValue
+        averageValue: {{ .Values.nginx.targetRPS }}
+

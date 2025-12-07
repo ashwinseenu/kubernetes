@@ -1,0 +1,16 @@
+# Global settings
+replicaCount: 1 # increasing it will consume more cpu and memory , bcoz we using multiple sets
+
+nginx:
+  image: ashwinseenu/msnginx:simple1
+  cpuRequest: "5m"
+  # Target 5 requests per second (for this install Prometheus Adapter)
+  targetRPS: 5
+
+kafka:
+  replicas: 1
+  storage: 5Gi
+
+splunk:
+  server: "splunk-server:9997"
+
